@@ -11,7 +11,7 @@ Heuristic::Heuristic(
       tolls(tolls),
       free_tolls(free_tolls), tolls_price(tolls_price) {}
 
-std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<int> &solution, std::vector<int> &tabu_list, int tabu)
+std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu)
 {
     int solution_size = solution.size();
 
@@ -21,7 +21,8 @@ std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<i
     for (int i = 0; i < solution_size - 1; i++)
         for (int j = i + 1; j < solution_size; j++)
         {
-            if (tabu_list[solution[i]] != 0 || tabu_list[solution[j]] != 0)
+            std::string key = i + " " + j;
+            if (tabu_list.find(key) != tabu_list.end())
                 continue;
 
             int prev = solution[(i - 1) % solution_size];
@@ -48,15 +49,16 @@ std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<i
         std::reverse(solution.begin() + best_i,
                      solution.begin() + best_j + 1);
 
-        tabu_list[solution[best_i]] = tabu;
-        
+        std::string key = solution[best_i] + " " + solution[best_j];
+        tabu_list[key] = tabu;
+
         return {true, solution};
     }
 
     return std::make_pair(false, solution);
 }
 
-std::pair<bool, std::vector<int>> Heuristic::find_best_improvement_tolls(const std::vector<int> &solution, std::vector<int> &tabu_list, int tabu)
+std::pair<bool, std::vector<int>> Heuristic::find_best_improvement_tolls(const std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu)
 {
     int best_improvement = 0;
 
@@ -144,18 +146,45 @@ std::vector<int> Heuristic::nearest_neighbor()
 
 int Heuristic::tabu_search()
 {
+    int max_tries = 1, tries = 0;
 
-    std::vector<int> solution = nearest_neighbor();
+    int tabu = (solution_size * 20) / 100;
+    std::unordered_map<std::string, int> tabu_list;
 
-    int tabu = (solution_size * 20)/100;
-    std::vector<int> tabu_list(tabu, 0);
+    tabu_list.reserve(tabu);
 
-    while (true)
+    while (tries < max_tries)
     {
-        if (free_tolls == solution_size)
-            find_best_improvement(solution, tabu_list, tabu);
-        else
-            find_best_improvement_tolls(solution, tabu_list, tabu);
+        std::vector<int> solution = nearest_neighbor();
+
+        int iter = 1, count = 0;
+
+        while (count < iter)
+        {
+            bool improved = false;
+            std::vector<int> new_solution;
+
+            auto result = (solution_size == free_tolls)
+                              ? find_best_improvement(solution, tabu_list, tabu)
+                              : find_best_improvement_tolls(solution, tabu_list, tabu);
+
+            improved = result.first;
+            new_solution = result.second;
+
+            if (condition)
+            {
+                /* code */
+            }
+
+            count++;
+        }
+
+        tries++;
+
+        if (condition)
+        {
+            /* code */
+        }
     }
 
     return 0;

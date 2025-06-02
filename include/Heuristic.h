@@ -3,8 +3,9 @@
 
 #include <algorithm>
 #include <list>
+#include <unordered_map>
 #include <vector>
-#include <vector>
+#include <string>
 
 class Heuristic
 {
@@ -16,10 +17,10 @@ private:
     double tolls_price;
 
     // Construir vizinhança com 2-opt
-    std::pair<bool, std::vector<int>> find_best_improvement(std::vector<int> &solution, std::vector<int> &tabu_list, int tabu);
+    std::pair<bool, std::vector<int>> find_best_improvement(std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu);
 
     // Construir vizinhança com 2-opt
-    std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution, std::vector<int> &tabu_list, int tabu);
+    std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu);
 
 public:
     Heuristic(
