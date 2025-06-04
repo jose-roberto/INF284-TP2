@@ -1,4 +1,5 @@
 #include "../include/Heuristic.h"
+#include <random>
 
 Heuristic::Heuristic(
     int solution_size,
@@ -11,51 +12,119 @@ Heuristic::Heuristic(
       tolls(tolls),
       free_tolls(free_tolls), tolls_price(tolls_price) {}
 
-std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu)
+// std::pair<bool, std::vector<int>> Heuristic::find_best_improvement(std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu)
+// {
+//     int solution_size = solution.size();
+
+//     int best_i = -1, best_j = -1;
+//     int best_improvement = 0;
+
+//     for (int i = 0; i < solution_size - 1; i++)
+//         for (int j = i + 1; j < solution_size; j++)
+//         {
+//             int prev = solution[(i - 1) % solution_size];
+//             int first_node = solution[i];
+//             int last_node = solution[j];
+//             int after = solution[(j + 1) % solution_size];
+
+//             std::string key = first_node + " " + last_node;
+//             if (tabu_list.find(key) != tabu_list.end())
+//                 continue;
+
+//             int original_value = distance[prev][first_node] + distance[last_node][after];
+
+//             int new_value = distance[prev][last_node] + distance[first_node][after];
+
+//             int improvement = new_value - original_value;
+
+//             if (improvement < best_improvement)
+//             {
+//                 best_improvement = improvement;
+//                 best_i = i;
+//                 best_j = j;
+//             }
+//         }
+
+//     if (best_improvement < 0)
+//     {
+//         std::reverse(solution.begin() + best_i,
+//                      solution.begin() + best_j + 1);
+
+//         if (tabu_list.size() < tabu)
+//         {
+//             std::string key = solution[best_i] + " " + solution[best_j];
+//             tabu_list[key] = tabu;
+//         }
+
+//         return {true, solution};
+//     }
+
+//     return std::make_pair(false, solution);
+// }
+
+std::pair<bool, std::vector<int>>
+Heuristic::find_best_improvement(std::vector<int> &solution,
+                                 std::unordered_map<std::string, int> &tabu_list,
+                                 int tabu_tenure)
 {
-    int solution_size = solution.size();
+    int n = solution_size;
 
     int best_i = -1, best_j = -1;
-    int best_improvement = 0;
+    // Queremos um delta negativo (pois “improvement” = custo_novo – custo_antigo).
+    int best_delta = 0;
 
-    for (int i = 0; i < solution_size - 1; i++)
-        for (int j = i + 1; j < solution_size; j++)
+    // Percorremos todas as trocas i<j (2-opt) na rota “solution”
+    for (int i = 0; i < n - 1; ++i)
+    {
+        for (int j = i + 1; j < n; ++j)
         {
-            std::string key = i + " " + j;
+            // Índice “prev” e “after” com wrap-around seguro:
+            int prev = solution[(i - 1 + n) % n];
+            int first_node = solution[i];
+            int last_node = solution[j];
+            int after = solution[(j + 1) % n];
+
+            // Monta a chave “first_node‐last_node” para o tabu-list
+            std::string key = std::to_string(first_node) + "-" + std::to_string(last_node);
+
+            // Se está tabu, pula (não avalia esse movimento)
             if (tabu_list.find(key) != tabu_list.end())
                 continue;
 
-            int prev = solution[(i - 1) % solution_size];
-            int first_node = solution[i];
-            int last_node = solution[j];
-            int after = solution[(j + 1) % solution_size];
+            // Custo atual = aresta(prev→first_node) + aresta(last_node→after)
+            int custo_original = distance[prev][first_node] + distance[last_node][after];
+            // Custo se trocarmos: aresta(prev→last_node) + aresta(first_node→after)
+            int custo_novo = distance[prev][last_node] + distance[first_node][after];
+            int delta = custo_novo - custo_original;
 
-            int original_value = distance[prev][first_node] + distance[last_node][after];
-
-            int new_value = distance[prev][last_node] + distance[first_node][after];
-
-            int improvement = new_value - original_value;
-
-            if (improvement < best_improvement)
+            // Se encontramos um delta melhor (mais negativo), armazenamos i,j
+            if (delta < best_delta)
             {
-                best_improvement = improvement;
+                best_delta = delta;
                 best_i = i;
                 best_j = j;
             }
         }
+    }
 
-    if (best_improvement < 0)
+    // Se achamos alguma melhoria (best_delta < 0), aplicamos o 2-opt:
+    if (best_delta < 0)
     {
-        std::reverse(solution.begin() + best_i,
-                     solution.begin() + best_j + 1);
+        // Inverte o trecho de i até j:
+        std::reverse(solution.begin() + best_i, solution.begin() + best_j + 1);
 
-        std::string key = solution[best_i] + " " + solution[best_j];
-        tabu_list[key] = tabu;
+        // Insere no tabu-list a aresta recém-criada (first_node→last_node) com tenure
+        // Recalcule quais são os nós na nova solução, pois o trecho já foi invertido:
+        int new_first = solution[best_i];
+        int new_last = solution[best_j];
+        std::string new_key = std::to_string(new_first) + "-" + std::to_string(new_last);
 
+        tabu_list[new_key] = tabu_tenure;
         return {true, solution};
     }
 
-    return std::make_pair(false, solution);
+    // Se não encontrou nenhuma troca válida, devolve false e mantém “solution” intacta
+    return {false, solution};
 }
 
 std::pair<bool, std::vector<int>> Heuristic::find_best_improvement_tolls(const std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu)
@@ -144,48 +213,92 @@ std::vector<int> Heuristic::nearest_neighbor()
     return std::vector<int>(partial_solution.begin(), partial_solution.end());
 }
 
+std::vector<int> Heuristic::random_solution()
+{
+    std::vector<int> sol(solution_size);
+    std::iota(sol.begin(), sol.end(), 0);
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::shuffle(sol.begin(), sol.end(), gen);
+
+    return sol;
+}
+
 int Heuristic::tabu_search()
 {
-    int max_tries = 1, tries = 0;
+    int max_restarts = 100;
+    int max_iters_per_restart = 100;
 
-    int tabu = (solution_size * 20) / 100;
-    std::unordered_map<std::string, int> tabu_list;
+    // Número de moves tabu permitidos simultaneamente (20% de n, por exemplo)
+    int tabu_tenure = (solution_size * 20) / 100;
+    if (tabu_tenure < 1)
+        tabu_tenure = 1;
 
-    tabu_list.reserve(tabu);
+    std::vector<int> best_solution_global;
+    int best_cost_global = std::numeric_limits<int>::max();
 
-    while (tries < max_tries)
+    // ========= Loop de “reinicializações” aleatórias =========
+    for (int restart = 0; restart < max_restarts; ++restart)
     {
-        std::vector<int> solution = nearest_neighbor();
+        // 1) Cria uma solução inicial aleatória
+        std::vector<int> current_solution = random_solution();
+        int current_cost = evaluate(current_solution, free_tolls);
 
-        int iter = 1, count = 0;
+        // 2) Inicializa tabu_list vazio (map: key → tempo restante)
+        std::unordered_map<std::string, int> tabu_list;
 
-        while (count < iter)
+        // 3) Se for a primeira reinicialização, atualiza best_global
+        if (restart == 0 || current_cost < best_cost_global)
         {
-            bool improved = false;
-            std::vector<int> new_solution;
+            best_solution_global = current_solution;
+            best_cost_global = current_cost;
+        }
 
-            auto result = (solution_size == free_tolls)
-                              ? find_best_improvement(solution, tabu_list, tabu)
-                              : find_best_improvement_tolls(solution, tabu_list, tabu);
-
-            improved = result.first;
-            new_solution = result.second;
-
-            if (condition)
+        // ========== Loop de iterações internas ==========
+        for (int iter = 0; iter < max_iters_per_restart; ++iter)
+        {
+            // 3.1) Decrementa todos os tempos do tabu_list. Remove os que cheguem a zero.
+            std::vector<std::string> to_erase;
+            for (auto &par : tabu_list)
             {
-                /* code */
+                par.second -= 1;
+                if (par.second <= 0)
+                    to_erase.push_back(par.first);
+            }
+            for (const auto &k : to_erase)
+                tabu_list.erase(k);
+
+            // 3.2) Busca a melhor troca 2-opt não-tabu para “current_solution”
+            auto [move_found, new_sol] = find_best_improvement(current_solution,
+                                                               tabu_list,
+                                                               tabu_tenure);
+            if (!move_found)
+            {
+                // Se não há mais movimentos não-tabu que melhorem, finaliza este restart
+                break;
             }
 
-            count++;
-        }
+            // Se encontrou move, atualiza current_solution + custo
+            current_solution = new_sol;
+            current_cost = evaluate(current_solution, free_tolls);
 
-        tries++;
+            // 3.3) Testa se é melhor que o global
+            if (current_cost < best_cost_global)
+            {
+                best_cost_global = current_cost;
+                best_solution_global = current_solution;
+            }
+        } // fim loop iterações
 
-        if (condition)
-        {
-            /* code */
-        }
-    }
+        // Após terminar iterações deste restart, a próxima reinicialização irá zerar tabu_list e gerar nova aleatória
+    } // fim loop restarts
 
-    return 0;
+    // No final, best_cost_global contém o melhor custo encontrado
+    // Se quiser, podemos imprimir a rota:
+    // std::cout << "Melhor custo = " << best_cost_global << "\n";
+    // for (int x : best_solution_global) std::cout << x << " ";
+    // std::cout << "\n";
+
+    return best_cost_global;
 }

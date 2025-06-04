@@ -1,6 +1,7 @@
 #ifndef HEURISTIC_H
 #define HEURISTIC_H
 
+#include <iostream>
 #include <algorithm>
 #include <list>
 #include <unordered_map>
@@ -21,6 +22,8 @@ private:
 
     // Construir vizinhança com 2-opt
     std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu);
+
+    std::vector<int> random_solution();
 
 public:
     Heuristic(

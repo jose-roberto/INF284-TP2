@@ -14,18 +14,19 @@ int main()
         "instances/gil262.tsp",
         "instances/gr666.tsp",
         "instances/dsj1000.tsp",
-        "instances/t1_burma14.tsp",
-        "instances/t2_burma14.tsp",
-        "instances/t3_burma14.tsp",
-        "instances/t1_berlin52.tsp",
-        "instances/t2_berlin52.tsp",
-        "instances/t3_berlin52.tsp",
-        "instances/t1_st70.tsp",
-        "instances/t2_st70.tsp",
-        "instances/t3_st70.tsp",
-        "instances/t4_st70.tsp",
-        "instances/t1_gil262.tsp",
-        "instances/t2_gil262.tsp"};
+        // "instances/t1_burma14.tsp",
+        // "instances/t2_burma14.tsp",
+        // "instances/t3_burma14.tsp",
+        // "instances/t1_berlin52.tsp",
+        // "instances/t2_berlin52.tsp",
+        // "instances/t3_berlin52.tsp",
+        // "instances/t1_st70.tsp",
+        // "instances/t2_st70.tsp",
+        // "instances/t3_st70.tsp",
+        // "instances/t4_st70.tsp",
+        // "instances/t1_gil262.tsp",
+        // "instances/t2_gil262.tsp"
+        };
 
     for (const auto &path : paths)
     {
@@ -150,7 +151,7 @@ int main()
             free_tolls,
             tolls_price);
 
-        std::cout << "Tabu Search" << std::endl;
+        std::cout << "Tabu Search: " << heuristic.tabu_search() << std::endl;
         
         std::cout << "ACO" << std::endl;
 
