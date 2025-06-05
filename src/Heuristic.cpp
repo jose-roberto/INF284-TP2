@@ -402,130 +402,56 @@ std::vector<int> Heuristic::random_generation()
 //     return best_cost_global;
 // }
 
-void Heuristic::ordered_crossover(std::vector<int> &population_a, std::vector<int> &population_b)
-{
-    int crossover_size = ((solution_size * 40) / 100);
-
-    std::unordered_set<int> dna_a, dna_b;
-    dna_a.insert(population_a.begin() + crossover_size - 1, population_a.begin() + (2 * crossover_size) - 1);
-    dna_b.insert(population_b.begin() + crossover_size - 1, population_b.begin() + (2 * crossover_size) - 1);
-
-    std::vector<int> remaining_dna_a, remaining_dna_b;
-    remaining_dna_a = population_a;
-    remaining_dna_b = population_b;
-
-    int aux_a = 0;
-    for (int i = 0; i < solution_size; i++)
-    {
-        if (i >= crossover_size - 1 && i < crossover_size * 2 - 1)
-            continue;
-
-        while (dna_a.find(remaining_dna_b[aux_a]) != dna_a.end())
-            aux_a++;
-
-        population_a[i] = remaining_dna_b[aux_a];
-        aux_a++;
-    }
-
-    int aux_b = 0;
-    for (int i = 0; i < solution_size; i++)
-    {
-        if (i >= crossover_size - 1 && i < crossover_size * 2 - 1)
-            continue;
-
-        while (dna_b.find(remaining_dna_a[aux_b]) != dna_b.end())
-            aux_b++;
-
-        population_b[i] = remaining_dna_a[aux_b];
-        aux_b++;
-    }
-}
-
-void Heuristic::mutation(std::vector<std::vector<int>> &population, int n_mutations)
-{
-    std::vector<int> randomly_generated = random_generation();
-    std::vector<int> targets(randomly_generated.begin(), randomly_generated.begin() + n_mutations);
-
-    for (int i = 0; i < n_mutations; i++)
-    {
-        std::vector<int> solution_target = population[targets[i]];
-
-        std::vector<int> randomly_generated = random_generation();
-
-        int a = randomly_generated[0];
-        int b = randomly_generated[1];
-
-        std::swap(solution_target[a], solution_target[b]);
-        population[targets[i]] = solution_target;
-    }
-}
-
-int Heuristic::genetic_algorithm()
-{
-    int population_size = (solution_size * 200) / 100;
-
-    std::vector<std::vector<int>> population;
-
-    for (int i = 0; i < population_size; i++)
-        population.push_back(random_generation());
-
-    int generations = (population_size * 500) / 100;
-
-
-    while (generations > 0)
-    {
-        for (int i = 0; i < population_size; i += 2)
-            ordered_crossover(population[i], population[i + 1]);
-
-        int n_mutations = (population_size * 5) / 100;
-
-        mutation(population, n_mutations);
-
-        generations--;
-    }
-
-    return 0;
-}
-
 int Heuristic::grasp() {
-    std::mt19937 rng(std::random_device{}());
-    std::uniform_int_distribution<int> startDist(0, solution_size - 1);
-    int start = startDist(rng);
+    int max_iter = solution_size/10, iter=0;
+    int best_solution = INT_MAX;
 
-    std::vector<bool> visited(solution_size, false);
-    visited[start] = true;
+    while(iter < max_iter){
+        std::mt19937 rng(std::random_device{}());
+        std::uniform_int_distribution<int> startDist(0, solution_size - 1);
+        int start = startDist(rng);
 
-    std::list<int> partial_solution;
-    partial_solution.push_back(start);
+        std::vector<bool> visited(solution_size, false);
+        visited[start] = true;
 
-    for (int i = 0; i < solution_size - 1; i++) {
-        int current = partial_solution.back();
+        std::list<int> partial_solution;
+        partial_solution.push_back(start);
 
-        int lb_cost = INT_MAX, up_cost = 0;
-        for (int j = 0; j < solution_size; j++) {
-            if (!visited[j]) {
-                int d = distance[current][j];
-                if (d < lb_cost) lb_cost = d;
-                if (d > up_cost)  up_cost = d;
+        for (int i = 0; i < solution_size - 1; i++) {
+            int current = partial_solution.back();
+
+            int lb_cost = INT_MAX, up_cost = 0;
+            for (int j = 0; j < solution_size; j++) {
+                if (!visited[j]) {
+                    int d = distance[current][j];
+                    if (d < lb_cost) lb_cost = d;
+                    if (d > up_cost)  up_cost = d;
+                }
             }
+
+            int limit = lb_cost + (int)std::lround(0.4 * (up_cost - lb_cost));
+
+            std::vector<int> rcl;
+            for (int j = 0; j < solution_size; j++) {
+                if (!visited[j] && distance[current][j] <= limit) {
+                    rcl.push_back(j);
+                }
+            }
+
+            std::uniform_int_distribution<int> dist(0, (int)rcl.size() - 1);
+            int best_neighbor = rcl[ dist(rng) ];
+
+            visited[best_neighbor] = true;
+            partial_solution.push_back(best_neighbor);
         }
 
-        int limit = lb_cost + (int)std::lround(0.4 * (up_cost - lb_cost));
+        std::vector<int> sol(partial_solution.begin(), partial_solution.end());
+        int result = local_search(sol);
+        if(result < best_solution)
+            best_solution = result;
 
-        std::vector<int> rcl;
-        for (int j = 0; j < solution_size; j++) {
-            if (!visited[j] && distance[current][j] <= limit) {
-                rcl.push_back(j);
-            }
-        }
-
-        std::uniform_int_distribution<int> dist(0, (int)rcl.size() - 1);
-        int best_neighbor = rcl[ dist(rng) ];
-
-        visited[best_neighbor] = true;
-        partial_solution.push_back(best_neighbor);
+        iter++;
     }
 
-    std::vector<int> sol(partial_solution.begin(), partial_solution.end());
-    return local_search(sol);
+    return best_solution;
 }
