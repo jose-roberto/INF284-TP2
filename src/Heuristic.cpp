@@ -1,6 +1,8 @@
 #include "../include/Heuristic.h"
 #include <random>
 #include <ctime>
+#include <numeric>
+#include <climits>
 
 Heuristic::Heuristic(
     int solution_size,
@@ -291,7 +293,7 @@ std::vector<int> Heuristic::nearest_neighbor()
 
     for (int i = 0; i < solution_size - 1; i++)
     {
-        int minimum_cost = __INT_MAX__;
+        int minimum_cost = INT_MAX;
 
         for (int j = 1; j < solution_size; j++)
         {
@@ -485,46 +487,45 @@ int Heuristic::genetic_algorithm()
     return 0;
 }
 
-int Heuristic::grasp(){
-    std::vector<bool> visited(solution_size, false);
-    visited[0] = true;
+int Heuristic::grasp() {
+    std::mt19937 rng(std::random_device{}());
+    std::uniform_int_distribution<int> startDist(0, solution_size - 1);
+    int start = startDist(rng);
 
-    int best_neighbor = -1;
+    std::vector<bool> visited(solution_size, false);
+    visited[start] = true;
 
     std::list<int> partial_solution;
-    partial_solution.push_back(0);
+    partial_solution.push_back(start);
 
-    for (int i = 0; i < solution_size - 1; i++)
-    {
-        std::vector<int> possible;
-        int minimum_cost = __INT_MAX__;
-        int max_cost = 0;
+    for (int i = 0; i < solution_size - 1; i++) {
+        int current = partial_solution.back();
 
-        for (int j = 1; j < solution_size; j++)
-        {
-            if (!visited[j] && (distance[partial_solution.back()][j] <= minimum_cost))
-                minimum_cost = j;
-
-            if (!visited[j] && (distance[partial_solution.back()][j] >= max_cost))
-                max_cost = j;
-        }
-
-        int limit = minimum_cost + 0.4 * (max_cost - minimum_cost);
-
-        for (int j = 1; j < solution_size; j++)
-        {
-            if (!visited[j] && (distance[partial_solution.back()][j] <= limit) && (distance[partial_solution.back()][j] <= limit)){
-                minimum_cost = distance[partial_solution.back()][j];
-                best_neighbor = j;
+        int lb_cost = INT_MAX, up_cost = 0;
+        for (int j = 0; j < solution_size; j++) {
+            if (!visited[j]) {
+                int d = distance[current][j];
+                if (d < lb_cost) lb_cost = d;
+                if (d > up_cost)  up_cost = d;
             }
         }
 
-        visited[best_neighbor] = true;
+        int limit = lb_cost + (int)std::lround(0.4 * (up_cost - lb_cost));
 
+        std::vector<int> rcl;
+        for (int j = 0; j < solution_size; j++) {
+            if (!visited[j] && distance[current][j] <= limit) {
+                rcl.push_back(j);
+            }
+        }
+
+        std::uniform_int_distribution<int> dist(0, (int)rcl.size() - 1);
+        int best_neighbor = rcl[ dist(rng) ];
+
+        visited[best_neighbor] = true;
         partial_solution.push_back(best_neighbor);
     }
 
     std::vector<int> sol(partial_solution.begin(), partial_solution.end());
-
     return local_search(sol);
 }
