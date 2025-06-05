@@ -18,17 +18,21 @@ private:
     int free_tolls;
     double tolls_price;
 
-    // Construir vizinhança com 2-opt
     std::pair<bool, std::vector<int>> find_best_improvement(std::vector<int> &solution);
 
-    // Construir vizinhança com 2-opt
     std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution);
 
+    std::pair<bool, std::vector<int>> tabu_find_best_improvement(
+        std::vector<int> &solution,
+        std::unordered_map<std::string, int> &tabu_list,
+        int tabu, int current_cost, int best_cost_global);
+
+    std::pair<bool, std::vector<int>> tabu_find_best_improvement_tolls(
+        const std::vector<int> &solution,
+        std::unordered_map<std::string, int> &tabu_list,
+        int tabu, int current_cost, int best_cost_global);
+
     std::vector<int> random_generation();
-
-    void ordered_crossover(std::vector<int> &population_a, std::vector<int> &population_b);
-
-    void mutation(std::vector<std::vector<int>> &population, int mutation_rate);
 
 public:
     Heuristic(
@@ -39,17 +43,13 @@ public:
 
     int evaluate(const std::vector<int> &solution, int free_tolls);
 
-    // Construir solução inicial
     std::vector<int> nearest_neighbor();
 
-    int tabu_search();
-    // Provavelmente o "tabu" será aplicado sobre as cidades, mas talvez será sobre os movimentos
-
-    int genetic_algorithm();
+    int local_search(std::vector<int> &solution);
 
     int grasp();
 
-    int local_search(std::vector<int> &solution);
+    int tabu_search();
 };
 
 #endif

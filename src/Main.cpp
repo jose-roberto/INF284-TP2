@@ -151,9 +151,9 @@ int main()
             free_tolls,
             tolls_price);
 
-        // std::cout << "Tabu Search: " << heuristic.tabu_search() << std::endl;
+        // std::cout << "Grasp: " << heuristic.grasp() << std::endl;
 
-        std::cout << "Grasp: " << heuristic.grasp() << std::endl;
+        std::cout << "Tabu Search: " << heuristic.tabu_search() << std::endl;
 
         std::cout << "-------------------------------------" << std::endl;
 
