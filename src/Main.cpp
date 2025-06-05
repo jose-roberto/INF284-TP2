@@ -26,7 +26,7 @@ int main()
         // "instances/t4_st70.tsp",
         // "instances/t1_gil262.tsp",
         // "instances/t2_gil262.tsp"
-        };
+    };
 
     for (const auto &path : paths)
     {
@@ -151,9 +151,9 @@ int main()
             free_tolls,
             tolls_price);
 
-        std::cout << "Tabu Search: " << heuristic.tabu_search() << std::endl;
-        
-        std::cout << "ACO" << std::endl;
+        // std::cout << "Tabu Search: " << heuristic.tabu_search() << std::endl;
+
+        std::cout << "Grasp: " << heuristic.grasp() << std::endl;
 
         std::cout << "-------------------------------------" << std::endl;
 

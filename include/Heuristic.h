@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <unordered_set>
 
 class Heuristic
 {
@@ -18,12 +19,16 @@ private:
     double tolls_price;
 
     // Construir vizinhança com 2-opt
-    std::pair<bool, std::vector<int>> find_best_improvement(std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu);
+    std::pair<bool, std::vector<int>> find_best_improvement(std::vector<int> &solution);
 
     // Construir vizinhança com 2-opt
-    std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution, std::unordered_map<std::string, int> &tabu_list, int tabu);
+    std::pair<bool, std::vector<int>> find_best_improvement_tolls(const std::vector<int> &solution);
 
-    std::vector<int> random_solution();
+    std::vector<int> random_generation();
+
+    void ordered_crossover(std::vector<int> &population_a, std::vector<int> &population_b);
+
+    void mutation(std::vector<std::vector<int>> &population, int mutation_rate);
 
 public:
     Heuristic(
@@ -40,7 +45,11 @@ public:
     int tabu_search();
     // Provavelmente o "tabu" será aplicado sobre as cidades, mas talvez será sobre os movimentos
 
-    int aco();
+    int genetic_algorithm();
+
+    int grasp();
+
+    int local_search(std::vector<int> &solution);
 };
 
 #endif
