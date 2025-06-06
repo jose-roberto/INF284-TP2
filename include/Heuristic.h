@@ -45,7 +45,7 @@ public:
 
     std::vector<int> nearest_neighbor();
 
-    int local_search(std::vector<int> &solution);
+    std::pair<std::vector<int>, int> local_search(std::vector<int> &solution);
 
     int grasp();
 

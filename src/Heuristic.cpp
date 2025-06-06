@@ -38,7 +38,7 @@ int Heuristic::evaluate(const std::vector<int> &solution, int free_tolls)
     return value;
 }
 
-int Heuristic::local_search(std::vector<int> &solution)
+std::pair<std::vector<int>, int> Heuristic::local_search(std::vector<int> &solution)
 {
     while (true)
     {
@@ -58,7 +58,7 @@ int Heuristic::local_search(std::vector<int> &solution)
         solution = new_solution;
     }
 
-    return evaluate(solution, free_tolls);
+    return {solution, evaluate(solution, free_tolls)};
 }
 
 std::vector<int> Heuristic::random_generation()
@@ -331,7 +331,7 @@ int Heuristic::grasp()
         }
 
         std::vector<int> sol(partial_solution.begin(), partial_solution.end());
-        int result = local_search(sol);
+        int result = local_search(sol).second;
         if (result < best_solution)
             best_solution = result;
 
@@ -344,7 +344,7 @@ int Heuristic::grasp()
 int Heuristic::tabu_search()
 {
     int max_restarts = 20;
-    int max_iters_per_restart = 200;
+    int max_iters_per_restart = 300;
 
     int tabu = (solution_size * 20) / 100;
 
@@ -358,7 +358,10 @@ int Heuristic::tabu_search()
     for (int restart = 0; restart < max_restarts; ++restart)
     {
         // 1) Cria uma solução inicial aleatória
-        std::vector<int> current_solution = random_generation();
+        std::vector<int> basic_solution = random_generation();
+
+        std::vector<int> current_solution = local_search(basic_solution).first;
+
         int current_cost = evaluate(current_solution, free_tolls);
 
         // 2) Inicializa tabu_list vazio (map: key → tempo restante)
