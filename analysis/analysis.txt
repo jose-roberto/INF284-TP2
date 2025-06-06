@@ -1,0 +1,36 @@
+burma14: todas as diferenças são 0 → p-valor = 1.0 (sem variação)
+
+t1_burma14: todas as diferenças são 0 → p-valor = 1.0 (sem variação)
+
+t2_burma14: todas as diferenças são 0 → p-valor = 1.0 (sem variação)
+
+t3_burma14: estatística=0.0000, p-valor=0.1797
+
+berlin52: estatística=0.0000, p-valor=0.2500
+
+t1_berlin52: estatística=0.0000, p-valor=0.2500
+
+t2_berlin52: estatística=0.0000, p-valor=0.3173
+
+t3_berlin52: estatística=1.0000, p-valor=0.5000
+
+st70: estatística=0.0000, p-valor=0.2500
+
+t1_st70: estatística=3.0000, p-valor=1.0000
+
+t2_st70: estatística=3.0000, p-valor=1.0000
+
+t3_st70: estatística=0.0000, p-valor=0.2500
+
+t4_st70: estatística=1.0000, p-valor=0.5000
+
+gil262: estatística=2.0000, p-valor=0.7500
+
+t1_gil262: estatística=1.0000, p-valor=0.5000
+
+t2_gil262: estatística=2.0000, p-valor=0.7500
+
+gr666: estatística=0.0000, p-valor=0.2500
+
+dsj1000: estatística=0.0000, p-valor=0.2500
+
