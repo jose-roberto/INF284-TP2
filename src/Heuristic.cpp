@@ -174,8 +174,6 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement(
 
             int improvement = custo_novo - custo_original;
 
-            // se este arco (first_node→last_node) estiver tabu, só o pulamos se
-            // ele não melhorar o melhor global:
             auto it = tabu_list.find(key);
             if (it != tabu_list.end())
             {
@@ -184,8 +182,6 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement(
                 {
                     continue;
                 }
-                // caso contrário (candidate_cost < best_cost_global),
-                // deixamos “cair” e aceitamos normalmente este movimento tabu (aspiração)
             }
 
             if (improvement < best_improvement)
@@ -196,13 +192,10 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement(
             }
         }
 
-    // Se achamos alguma melhoria (best_improvement < 0), aplicamos o 2-opt:
     if (best_improvement < 0)
     {
         std::reverse(solution.begin() + best_i, solution.begin() + best_j + 1);
 
-        // Insere no tabu-list a aresta recém-criada (first_node→last_node) com tenure
-        // Recalcule quais são os nós na nova solução, pois o trecho já foi invertido:
         int new_first = solution[best_i];
         int new_last = solution[best_j];
 
@@ -241,8 +234,6 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement_tolls(
             int new_value = evaluate(candidate, free_tolls);
             int improvement = new_value - original_value;
 
-            // se este arco (first_node→last_node) estiver tabu, só o pulamos se
-            // ele não melhorar o melhor global:
             auto it = tabu_list.find(key);
             if (it != tabu_list.end())
             {
@@ -251,8 +242,6 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement_tolls(
                 {
                     continue;
                 }
-                // caso contrário (candidate_cost < best_cost_global),
-                // deixamos “cair” e aceitamos normalmente este movimento tabu (aspiração)
             }
 
             if (improvement < best_improvement)
@@ -260,8 +249,6 @@ std::pair<bool, std::vector<int>> Heuristic::tabu_find_best_improvement_tolls(
                 best_improvement = improvement;
                 best_solution = candidate;
 
-                // Insere no tabu-list a aresta recém-criada (first_node→last_node) com tenure
-                // Recalcule quais são os nós na nova solução, pois o trecho já foi invertido:
                 int new_first = solution[i];
                 int new_last = solution[j];
 
@@ -354,30 +341,24 @@ int Heuristic::tabu_search()
     std::vector<int> best_solution_global;
     int best_cost_global = std::numeric_limits<int>::max();
 
-    // ========= Loop de “reinicializações” aleatórias =========
     for (int restart = 0; restart < max_restarts; ++restart)
     {
-        // 1) Cria uma solução inicial aleatória
         std::vector<int> basic_solution = random_generation();
 
         std::vector<int> current_solution = local_search(basic_solution).first;
 
         int current_cost = evaluate(current_solution, free_tolls);
 
-        // 2) Inicializa tabu_list vazio (map: key → tempo restante)
         std::unordered_map<std::string, int> tabu_list;
 
-        // 3) Se for a primeira reinicialização, atualiza best_global
         if (restart == 0 || current_cost < best_cost_global)
         {
             best_solution_global = current_solution;
             best_cost_global = current_cost;
         }
 
-        // ========== Loop de iterações internas ==========
         for (int iter = 0; iter < max_iters_per_restart; ++iter)
         {
-            // 3.1) Decrementa todos os tempos do tabu_list. Remove os que cheguem a zero.
             std::vector<std::string> to_erase;
             for (auto &par : tabu_list)
             {
@@ -388,31 +369,26 @@ int Heuristic::tabu_search()
             for (const auto &k : to_erase)
                 tabu_list.erase(k);
 
-            // 3.2) Busca a melhor troca 2-opt não-tabu para “current_solution”
             auto [move_found, new_sol] = (solution_size == free_tolls)
                                              ? tabu_find_best_improvement(current_solution, tabu_list, tabu, current_cost, best_cost_global)
                                              : tabu_find_best_improvement_tolls(current_solution, tabu_list, tabu, current_cost, best_cost_global);
 
             if (!move_found)
             {
-                // Se não há mais movimentos não-tabu que melhorem, finaliza este restart
                 break;
             }
 
-            // Se encontrou move, atualiza current_solution + custo
             current_solution = new_sol;
             current_cost = evaluate(current_solution, free_tolls);
 
-            // 3.3) Testa se é melhor que o global
             if (current_cost < best_cost_global)
             {
                 best_cost_global = current_cost;
                 best_solution_global = current_solution;
             }
-        } // fim loop iterações
+        }
 
-        // Após terminar iterações deste restart, a próxima reinicialização irá zerar tabu_list e gerar nova aleatória
-    } // fim loop restarts
+    } 
 
     return best_cost_global;
 }
